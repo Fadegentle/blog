@@ -36,27 +36,26 @@ export function PageContent({ type, content, entries, path, params }: PageConten
     }, [type, content, path]);
 
     const getGitHubUrl = (currentPath: string) => {
-        if (!currentPath) return '';
+        if (!currentPath) return GITHUB_REPO_URL; // 防止空路径返回错误
+
         try {
-            const pathParts = currentPath.split('/');
-            const contentsIndex = pathParts.indexOf('contents');
-            if (contentsIndex === -1) return '';
+            // 首先将路径分割成各部分并解码，以防路径中已有部分已经被编码
+            const decodedPath = currentPath
+                .split('/')
+                .map(part => {
+                    try {
+                        return decodeURIComponent(part); // 先解码
+                    } catch (e) {
+                        return part; // 如果解码失败（如不需要解码的部分），直接返回原部分
+                    }
+                })
+                .map(part => encodeURIComponent(part)) // 然后重新编码
+                .join('/');
 
-            // 提取相对路径并处理编码
-            const relativeParts = pathParts.slice(contentsIndex + 1);
-            const encodedParts = relativeParts.map(part => encodeURIComponent(part));
-            const relativePath = encodedParts.join('/');
-
-            if (!relativePath) return '';
-
-            // 对于文件类型，确保添加 .md 后缀
-            if (!relativePath.endsWith('.md') && type === 'file') {
-                return `${GITHUB_REPO_URL}/${relativePath}.md`;
-            }
-            return `${GITHUB_REPO_URL}/${relativePath}`;
+            return `${GITHUB_REPO_URL}/${decodedPath}.md`;
         } catch (error) {
-            console.error('Error generating GitHub URL:', error);
-            return '';
+            console.error('GitHub URL 生成失败:', error);
+            return GITHUB_REPO_URL;
         }
     };
 

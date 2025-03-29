@@ -6,9 +6,7 @@ import matter from 'gray-matter';
 const contentsDirectory = path.join(process.cwd(), 'contents');
 
 interface PageParams {
-    params: {
-        slug: string[];
-    };
+    params: Promise<{ slug: string[] }>;
 }
 
 // 同步处理路径的辅助函数

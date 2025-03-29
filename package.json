@@ -28,6 +28,7 @@
     "@types/node": "22.13.14",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "@types/rss": "^0.0.32",
     "tailwindcss": "^4",
     "typescript": "^5"
   }

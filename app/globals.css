@@ -28,6 +28,7 @@ body {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
+  transition: background-position 0.3s ease-out;
 }
 
 @keyframes gradientShift {
@@ -66,14 +67,14 @@ ul {
   padding: 0;
 }
 
+/* 移除全局 li 样式，改为只针对特定场景 */
 li {
-  margin-bottom: 10px;
+  /* 移除 margin-bottom */
 }
 
+/* 移除全局 a 标签样式，改为更具体的选择器 */
 a {
-  color: #333;
   text-decoration: none;
-  transition: color 0.3s ease;
 }
 
 a:hover {
@@ -87,6 +88,14 @@ main {
   width: 100%;
   max-width: 1200px;
   margin: 0 auto;
+  min-height: 100vh;
+  position: relative;
+  z-index: 1;
+  transform: translateZ(0);
+  /* 开启硬件加速 */
+  -webkit-font-smoothing: antialiased;
+  /* 优化字体渲染 */
+  -moz-osx-font-smoothing: grayscale;
 }
 
 article {
@@ -94,9 +103,30 @@ article {
   backdrop-filter: blur(10px);
   border-radius: 12px;
   padding: 2rem;
-  max-width: 800px;
+  width: 100%;
+  max-width: 1200px;
   margin: 2rem auto;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  will-change: opacity, transform;
+  /* 优化动画和性能 */
+  opacity: 0;
+  /* 初始状态设为透明 */
+  animation: pageTransition 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+
+  /* 移除可能造成闪烁的 3D 属性 */
+  /* transform-style: preserve-3d; */
+  /* perspective: 1000px; */
+
+  /* 优化过渡效果 */
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* 添加页面离开的状态 */
+article.exit {
+  opacity: 0;
+  transform: translateX(-10px);
+  /* 反向移动 */
 }
 
 h1 {
@@ -119,9 +149,14 @@ p {
   margin-bottom: 2rem;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   border: 1px solid rgba(255, 255, 255, 0.2);
+  transition: all 0.3s ease-out;
+  will-change: transform, opacity;
 }
 
 .nav-title h2 {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
   font-size: 1.8rem;
   /* 增大标题字号 */
   font-weight: 700;
@@ -133,6 +168,22 @@ p {
   /* 添加文字阴影 */
   letter-spacing: 0.5px;
   /* 增加字间距 */
+}
+
+/* 调整 RSS 链接在标题中的样式 */
+.nav-title .rss-link {
+  font-size: 1rem;
+  /* 相对于标题调小一些 */
+  padding: 0.3rem;
+  /* 调整内边距使图标更协调 */
+  margin-top: 0.2rem;
+  /* 微调垂直对齐 */
+}
+
+.nav-title .rss-icon {
+  width: 14px;
+  /* 略微调小图标 */
+  height: 14px;
 }
 
 /* 目录列表样式 */
@@ -154,6 +205,8 @@ p {
   /* 添加毛玻璃效果 */
   border: 1px solid rgba(255, 255, 255, 0.2);
   /* 添加边框 */
+  transition: all 0.3s ease-out;
+  will-change: transform;
 }
 
 .nav-list li:hover {
@@ -165,7 +218,7 @@ p {
 }
 
 .nav-list a {
-  color: #fff;
+  color: rgba(101, 108, 112, 0.95);
   display: block;
   width: 100%;
   text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
@@ -193,4 +246,88 @@ p {
 
 .post-date {
   font-style: italic;
+}
+
+/* 优化页面切换动画 */
+@keyframes pageTransition {
+  from {
+    opacity: 0;
+    transform: translateX(10px);
+    /* 改为水平方向的移动 */
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* 添加加载状态相关样式 */
+.page-content {
+  opacity: 0;
+  transition: opacity 0.3s ease-out;
+}
+
+.page-content.loaded {
+  opacity: 1;
+}
+
+.github-link {
+  margin-top: 2rem;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.github-link a {
+  display: inline-flex;
+  align-items: center;
+  color: #0070f3;
+  text-decoration: none;
+}
+
+.github-link a:hover {
+  text-decoration: underline;
+}
+
+.site-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem;
+  margin-bottom: 2rem;
+}
+
+.title-container {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.site-title {
+  font-size: 1.8rem;
+  font-weight: bold;
+  color: rgba(41, 50, 56, 0.95);
+  text-decoration: none;
+}
+
+.rss-link {
+  display: flex;
+  align-items: center;
+  padding: 0.5rem;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 50%;
+  text-decoration: none;
+  color: rgba(41, 50, 56, 0.95);
+  transition: all 0.3s ease;
+}
+
+.rss-link:hover {
+  background: rgba(255, 255, 255, 0.2);
+  transform: translateY(-1px);
+}
+
+.rss-icon {
+  width: 16px;
+  height: 16px;
+  fill: currentColor;
 }

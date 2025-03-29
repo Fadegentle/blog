@@ -4,33 +4,58 @@ import RSS from 'rss';
 import matter from 'gray-matter';
 
 const contentsDirectory = path.join(process.cwd(), 'contents');
+const SITE_URL = 'https://fadegentle.com'; // 替换为你的实际网站 URL
 
 export async function GET() {
     const feed = new RSS({
-        title: '你的博客标题',
-        description: '你的博客描述',
-        feed_url: '你的博客 URL/rss.xml',
-        site_url: '你的博客 URL',
+        title: 'Fadegentle WebSite',
+        description: '个人博客 & 知识库',
+        feed_url: `${SITE_URL}/rss.xml`,
+        site_url: SITE_URL,
+        language: 'zh-CN',
+        pubDate: new Date(),
     });
 
-    const fileNames = fs.readdirSync(contentsDirectory);
+    // 递归获取所有 .md 文件
+    const getAllMarkdownFiles = (dir: string): string[] => {
+        let results: string[] = [];
+        const list = fs.readdirSync(dir);
 
-    fileNames.forEach((fileName) => {
-        const fullPath = path.join(contentsDirectory, fileName);
-        const fileContents = fs.readFileSync(fullPath, 'utf8');
+        list.forEach(file => {
+            const fullPath = path.join(dir, file);
+            const stat = fs.statSync(fullPath);
+
+            if (stat.isDirectory()) {
+                results = results.concat(getAllMarkdownFiles(fullPath));
+            } else if (file.endsWith('.md')) {
+                results.push(fullPath);
+            }
+        });
+
+        return results;
+    };
+
+    const markdownFiles = getAllMarkdownFiles(contentsDirectory);
+
+    markdownFiles.forEach((filePath) => {
+        const fileContents = fs.readFileSync(filePath, 'utf8');
         const matterResult = matter(fileContents);
+        const relativePath = path.relative(contentsDirectory, filePath);
+        const urlPath = relativePath.replace(/\.md$/, '');
 
         feed.item({
-            title: matterResult.data.title,
+            title: matterResult.data.title || path.basename(filePath, '.md'),
             description: matterResult.content,
-            url: `你的博客 URL/${fileName.replace(/\.md$/, '')}`,
-            date: matterResult.data.date,
+            url: `${SITE_URL}/${urlPath}`,
+            date: matterResult.data.date || new Date(),
+            author: matterResult.data.author || 'Fadegentle',
         });
     });
 
     return new Response(feed.xml(), {
         headers: {
             'Content-Type': 'application/xml',
+            'Cache-Control': 'public, max-age=3600',
         },
     });
 }

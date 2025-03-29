@@ -23,7 +23,7 @@ export default function Home() {
   return (
     <main>
       <div className="nav-title">
-        <h2>Fadegentle WebSite</h2>
+        {/* <h2>Fadegentle WebSite</h2> */}
         <ul className="nav-list">
           {items.map((item) => {
             const fullPath = path.join(contentsDirectory, item);

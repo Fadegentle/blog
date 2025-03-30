@@ -1,10 +1,24 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { HTMLAttributes, useEffect, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import mermaid from 'mermaid';
 import matter from 'gray-matter';
-import { decodePath } from '../utils';
+import { getGitHubUrl } from '../utils';
+
+// 初始化 Mermaid 配置
+mermaid.initialize({
+    startOnLoad: true,
+    theme: 'neutral',
+    securityLevel: 'loose',
+    fontFamily: 'system-ui, -apple-system, "Segoe UI"',
+    fontSize: 14,
+    flowchart: {
+        htmlLabels: true,
+        curve: 'basis'
+    }
+});
 
 interface PageContentProps {
     type: 'file' | 'directory' | 'error';
@@ -20,7 +34,41 @@ interface PageContentProps {
     };
 }
 
-const GITHUB_REPO_URL = 'https://github.com/Fadegentle/SelfSomething/blob/main';
+const MermaidComponent = ({ value }: { value: string }) => {
+    const [svg, setSvg] = useState<string>('');
+    const [error, setError] = useState<string>('');
+
+    useEffect(() => {
+        try {
+            mermaid.render('mermaid-svg', value).then(({ svg }) => {
+                setSvg(svg);
+                setError('');
+            }).catch(err => {
+                console.error('Mermaid 渲染错误:', err);
+                setError('图表语法错误，请检查 Mermaid 语法');
+            });
+        } catch (err) {
+            console.error('Mermaid 处理错误:', err);
+            setError('图表处理失败');
+        }
+    }, [value]);
+
+    if (error) {
+        return (
+            <div className="mermaid-error">
+                <p>{error}</p>
+                <pre>{value}</pre>
+            </div>
+        );
+    }
+
+    return (
+        <div
+            className="mermaid-wrapper"
+            dangerouslySetInnerHTML={{ __html: svg }}
+        />
+    );
+};
 
 export function PageContent({ type, content, title, entries, path, params }: PageContentProps) {
     const [isLoaded, setIsLoaded] = useState(false);
@@ -30,19 +78,6 @@ export function PageContent({ type, content, title, entries, path, params }: Pag
         Promise.resolve().then(() => setIsLoaded(true));
         return () => setIsLoaded(false);
     }, [type, content, path]);
-
-    const getGitHubUrl = (currentPath: string) => {
-        if (!currentPath) return GITHUB_REPO_URL; // 防止空路径返回错误
-
-        try {
-            // 首先将路径分割成各部分并解码，以防路径中已有部分已经被编码
-            const decodedPath = decodePath(currentPath)
-            return `${GITHUB_REPO_URL}/${decodedPath}.md`;
-        } catch (error) {
-            console.error('GitHub URL 生成失败:', error);
-            return GITHUB_REPO_URL;
-        }
-    };
 
     const renderContent = () => {
         console.log('PageContent 渲染:', { type, path });
@@ -112,7 +147,34 @@ export function PageContent({ type, content, title, entries, path, params }: Pag
                                 </a>
                             </h2>
                             <div className="markdown-content">
-                                <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                                <ReactMarkdown
+                                    remarkPlugins={[remarkGfm]}
+                                    components={{
+                                        code: ({
+                                            inline,
+                                            className,
+                                            children,
+                                            ...props
+                                        }: {
+                                            inline?: boolean; // ✅ 这里显式定义 inline
+                                            className?: string;
+                                            children?: React.ReactNode;
+                                        } & HTMLAttributes<HTMLElement>) => {
+                                            const match = /language-(\w+)/.exec(className || '');
+                                            const value = String(children).replace(/\n$/, '');
+
+                                            if (!inline && match?.[1] === 'mermaid') {
+                                                return <MermaidComponent value={value} />;
+                                            }
+
+                                            return (
+                                                <code className={className} {...props}>
+                                                    {children}
+                                                </code>
+                                            );
+                                        }
+                                    }}
+                                >
                                     {matterResult.content}
                                 </ReactMarkdown>
                             </div>

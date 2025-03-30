@@ -127,6 +127,7 @@ export default async function Post({ params }: PageParams) {
                     content={fileContents}
                     title={fileName}
                     path={mdPath}
+                    params={{ slug: resolvedSlug }}
                 />;
             }
         }

@@ -24,16 +24,26 @@ export function decodePath(path: string) {
         }).join('/');
 }
 
-export function decodeGitHubPath(path: string) {
-    return path
-        .split('/')
-        .map(part => {
-            try {
-                return decodeURIComponent(part); // 先解码
-            } catch (e) {
-                return part; // 如果解码失败（如不需要解码的部分），直接返回原部分
-            }
-        })
-        .map(part => encodeURIComponent(part))
-        .join('/');
-}
+
+const GITHUB_REPO_URL = 'https://github.com/Fadegentle/SelfSomething/blob/main';
+
+export function getGitHubUrl(currentPath: string) {
+    if (!currentPath) return GITHUB_REPO_URL; // 防止空路径返回错误
+
+    try {
+        const contentsIndex = currentPath.indexOf('contents');
+
+        if (contentsIndex === -1) return GITHUB_REPO_URL;
+
+        const relativePath = currentPath.slice(contentsIndex + 9); // 'contents/'.length = 9
+        const decodedPath = decodePath(relativePath);
+        const cleanPath = decodedPath.replace(/^\/+/, '');  // 移除开头的斜杠（如果有）
+
+        if (!cleanPath) return GITHUB_REPO_URL;
+
+        return `${GITHUB_REPO_URL}/${decodedPath}`;
+    } catch (error) {
+        console.error('GitHub URL 生成失败:', error);
+        return GITHUB_REPO_URL;
+    }
+};

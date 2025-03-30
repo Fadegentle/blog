@@ -2,9 +2,7 @@ import { PageContent } from './PageContent';
 import fs from 'fs';
 import path from 'path';
 import matter from 'gray-matter';
-import { decodePath } from '../utils';
-
-const contentsDirectory = path.join(process.cwd(), 'contents');
+import { contentsDirectory, decodePath } from '../utils';
 
 interface PageParams {
     params: Promise<{ slug: string[] }>;

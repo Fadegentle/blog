@@ -1,7 +1,6 @@
 import fs from 'fs';
 import path from 'path';
-
-const contentsDirectory = path.join(process.cwd(), 'contents');
+import { contentsDirectory } from './utils';
 
 export default function Home() {
   const items = fs.readdirSync(contentsDirectory)

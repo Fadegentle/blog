@@ -1,3 +1,7 @@
+import path from 'path';
+
+export const contentsDirectory = path.join(process.cwd(), 'public', 'SelfSomething');
+
 export function generateRandomColdColor(): string {
     const h = Math.floor(Math.random() * (240 - 200) + 200);
     const s = Math.floor(Math.random() * 30 + 30) + '%';

@@ -2,8 +2,8 @@ import fs from 'fs';
 import path from 'path';
 import RSS from 'rss';
 import matter from 'gray-matter';
+import { contentsDirectory } from '../utils';
 
-const contentsDirectory = path.join(process.cwd(), 'contents');
 const SITE_URL = 'https://fadegentle.com'; // 替换为你的实际网站 URL
 
 export async function GET() {

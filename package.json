@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",
-    "prebuild": "git submodule update --init --recursive",
+    "prebuild": "rm -rf public/SelfSomething && git init && git config --global init.defaultBranch main && git submodule add https://github.com/Fadegentle/SelfSomething.git public/SelfSomething",
     "build": "next build",
     "start": "next start",
     "lint": "next lint"

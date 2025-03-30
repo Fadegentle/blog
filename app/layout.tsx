@@ -1,6 +1,6 @@
 'use client';
 
-import { generateRandomColdColor, generateRandomWarmColor } from './colorUtils';
+import { generateRandomColdColor, generateRandomWarmColor } from './utils';
 import { useLayoutEffect } from 'react';
 import './globals.css';
 

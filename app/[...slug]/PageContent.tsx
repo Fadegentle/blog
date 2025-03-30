@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import matter from 'gray-matter';
+import { decodePath } from '../utils';
 
 interface Entry {
     name: string;
@@ -25,20 +26,6 @@ interface PageContentProps {
 }
 
 const GITHUB_REPO_URL = 'https://github.com/Fadegentle/SelfSomething/blob/main';
-
-function decodePath(path: string) {
-    return path
-        .split('/')
-        .map(part => {
-            try {
-                return decodeURIComponent(part); // 先解码
-            } catch (e) {
-                return part; // 如果解码失败（如不需要解码的部分），直接返回原部分
-            }
-        })
-        .map(part => encodeURIComponent(part)) // 然后重新编码
-        .join('/');
-}
 
 export function PageContent({ type, content, entries, path, params }: PageContentProps) {
     const [isLoaded, setIsLoaded] = useState(false);
@@ -63,13 +50,13 @@ export function PageContent({ type, content, entries, path, params }: PageConten
     };
 
     const renderContent = () => {
-        console.log('PageContent 渲染:', { type, content, path });
+        console.log('PageContent 渲染:', { type, path });
 
         switch (type) {
             case 'directory': {
                 // 使用已解析的 params
                 const directoryName = params?.slug?.length
-                    ? params.slug[params.slug.length - 1]
+                    ? decodeURIComponent(params.slug[params.slug.length - 1])
                     : '根目录';
 
                 return (

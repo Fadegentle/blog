@@ -2,6 +2,7 @@ import { PageContent } from './PageContent';
 import fs from 'fs';
 import path from 'path';
 import matter from 'gray-matter';
+import { decodePath } from '../utils';
 
 const contentsDirectory = path.join(process.cwd(), 'contents');
 
@@ -12,9 +13,9 @@ interface PageParams {
 // 同步处理路径的辅助函数
 function createPaths(slug: string[]) {
     const slugPath = slug.join('/');
-    const fullPath = path.join(contentsDirectory, slugPath);
+    const undecodeFullPath = path.join(contentsDirectory, slugPath);
     const currentSlug = slug[slug.length - 1];
-    return { slugPath, fullPath, currentSlug, slug };
+    return { slugPath, undecodeFullPath: undecodeFullPath, currentSlug, slug };
 }
 
 export async function generateStaticParams() {
@@ -43,7 +44,8 @@ export async function generateStaticParams() {
 export async function generateMetadata({ params }: PageParams) {
     const resolvedParams = await params; // 确保 params 是异步解析后的
     const resolvedSlug: string[] = [...resolvedParams.slug];
-    const { fullPath, currentSlug } = createPaths(resolvedSlug);
+    const { undecodeFullPath, currentSlug } = createPaths(resolvedSlug);
+    const fullPath = decodePath(undecodeFullPath);
 
     try {
         if (fs.existsSync(`${fullPath}.md`)) {
@@ -67,24 +69,37 @@ export async function generateMetadata({ params }: PageParams) {
 }
 
 export default async function Post({ params }: PageParams) {
-    const resolvedParams = await params; // 确保 params 是异步解析后的
+    const resolvedParams = await params;
     const resolvedSlug: string[] = [...resolvedParams.slug];
-    const { slugPath, fullPath } = createPaths(resolvedSlug);
+    const { slugPath, undecodeFullPath } = createPaths(resolvedSlug);
+    const decodedFullPath = decodePath(undecodeFullPath);
 
     try {
-        // 首先检查是否为目录
-        if (fs.existsSync(fullPath) && fs.statSync(fullPath).isDirectory()) {
-            const entries = fs.readdirSync(fullPath);
+        // 检查 .md 文件的多种可能路径 - 全部使用已解码的路径
+        const possiblePaths = [
+            decodedFullPath,                    // 原始路径
+            `${decodedFullPath}.md`,           // 添加 .md 后缀
+            path.join(decodedFullPath, 'README.md'),  // 目录下的 README.md
+            // 处理最后一段可能包含 .md 的情况
+            path.join(
+                path.dirname(decodedFullPath),
+                `${path.basename(decodedFullPath, '.md')}.md`
+            )
+        ];
+
+        // 首先检查是否为目录 - 使用已解码的路径
+        if (fs.existsSync(decodedFullPath) && fs.statSync(decodedFullPath).isDirectory()) {
+            const entries = fs.readdirSync(decodedFullPath);
             const processedEntries = entries
                 .filter(entry => {
-                    const entryPath = path.join(fullPath, entry);
+                    const entryPath = path.join(decodedFullPath, entry);
                     const isDirectory = fs.statSync(entryPath).isDirectory();
                     return !entry.startsWith('.') &&
                         !entry.toLowerCase().includes('license') &&
                         (entry.endsWith('.md') || isDirectory);
                 })
                 .map(entry => {
-                    const entryPath = path.join(fullPath, entry);
+                    const entryPath = path.join(decodedFullPath, entry);
                     const isDirectory = fs.statSync(entryPath).isDirectory();
                     return {
                         name: entry,
@@ -101,28 +116,16 @@ export default async function Post({ params }: PageParams) {
             return <PageContent
                 type="directory"
                 entries={processedEntries}
-                path={fullPath}
-                params={{ slug: resolvedSlug }}  // 传递已解析的 slug
+                path={decodedFullPath}
+                params={{ slug: resolvedSlug }}
             />;
         }
-
-        // 检查 .md 文件的多种可能路径
-        const possiblePaths = [
-            fullPath,                    // 原始路径
-            `${fullPath}.md`,           // 添加 .md 后缀
-            path.join(fullPath, 'README.md'),  // 目录下的 README.md
-            // 处理最后一段可能包含 .md 的情况
-            path.join(
-                path.dirname(fullPath),
-                `${path.basename(fullPath, '.md')}.md`
-            )
-        ];
 
         console.log('尝试查找的文件路径:', possiblePaths);
 
         for (const mdPath of possiblePaths) {
             if (fs.existsSync(mdPath)) {
-                console.log('找到文件:', mdPath); // 添加日志便于调试
+                console.log('找到文件:', mdPath);
                 const fileContents = fs.readFileSync(mdPath, 'utf8');
                 const matterResult = matter(fileContents);
                 return <PageContent

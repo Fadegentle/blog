@@ -6,11 +6,6 @@ import remarkGfm from 'remark-gfm';
 import matter from 'gray-matter';
 import { decodePath } from '../utils';
 
-interface Entry {
-    name: string;
-    isDirectory: boolean;
-}
-
 interface PageContentProps {
     type: 'file' | 'directory' | 'error';
     content?: string;
@@ -27,7 +22,7 @@ interface PageContentProps {
 
 const GITHUB_REPO_URL = 'https://github.com/Fadegentle/SelfSomething/blob/main';
 
-export function PageContent({ type, content, entries, path, params }: PageContentProps) {
+export function PageContent({ type, content, title, entries, path, params }: PageContentProps) {
     const [isLoaded, setIsLoaded] = useState(false);
 
     useEffect(() => {
@@ -105,13 +100,22 @@ export function PageContent({ type, content, entries, path, params }: PageConten
             case 'file': {
                 const matterResult = matter(content || '');
                 const githubUrl = path ? getGitHubUrl(path) : '';
+
                 return (
                     <article>
                         <div className="nav-title">
-                            <h2>{matterResult.data.title}</h2>
-                            <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                                {matterResult.content}
-                            </ReactMarkdown>
+                            <h2>{title}
+                                <a href="/rss.xml" className="rss-link" target="_blank" rel="noopener noreferrer">
+                                    <svg className="rss-icon" viewBox="0 0 24 24">
+                                        <path d="M6.18,15.64A2.18,2.18 0 0,1 8.36,17.82C8.36,19 7.38,20 6.18,20C5,20 4,19 4,17.82A2.18,2.18 0 0,1 6.18,15.64M4,4.44A15.56,15.56 0 0,1 19.56,20H16.73A12.73,12.73 0 0,0 4,7.27V4.44M4,10.1A9.9,9.9 0 0,1 13.9,20H11.07A7.07,7.07 0 0,0 4,12.93V10.1Z" />
+                                    </svg>
+                                </a>
+                            </h2>
+                            <div className="markdown-content">
+                                <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                                    {matterResult.content}
+                                </ReactMarkdown>
+                            </div>
                             {githubUrl && (
                                 <p className="github-link">
                                     <a href={githubUrl} target="_blank" rel="noopener noreferrer">

@@ -80,11 +80,6 @@ export default async function Post({ params }: PageParams) {
             decodedFullPath,                    // 原始路径
             `${decodedFullPath}.md`,           // 添加 .md 后缀
             path.join(decodedFullPath, 'README.md'),  // 目录下的 README.md
-            // 处理最后一段可能包含 .md 的情况
-            path.join(
-                path.dirname(decodedFullPath),
-                `${path.basename(decodedFullPath, '.md')}.md`
-            )
         ];
 
         // 首先检查是否为目录 - 使用已解码的路径
@@ -121,17 +116,15 @@ export default async function Post({ params }: PageParams) {
             />;
         }
 
-        console.log('尝试查找的文件路径:', possiblePaths);
-
         for (const mdPath of possiblePaths) {
             if (fs.existsSync(mdPath)) {
                 console.log('找到文件:', mdPath);
                 const fileContents = fs.readFileSync(mdPath, 'utf8');
-                const matterResult = matter(fileContents);
+                const fileName = path.basename(mdPath, path.extname(mdPath));
                 return <PageContent
                     type="file"
                     content={fileContents}
-                    title={matterResult.data.title}
+                    title={fileName}
                     path={mdPath}
                 />;
             }

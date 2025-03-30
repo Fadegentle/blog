@@ -26,6 +26,20 @@ interface PageContentProps {
 
 const GITHUB_REPO_URL = 'https://github.com/Fadegentle/SelfSomething/blob/main';
 
+function decodePath(path: string) {
+    return path
+        .split('/')
+        .map(part => {
+            try {
+                return decodeURIComponent(part); // 先解码
+            } catch (e) {
+                return part; // 如果解码失败（如不需要解码的部分），直接返回原部分
+            }
+        })
+        .map(part => encodeURIComponent(part)) // 然后重新编码
+        .join('/');
+}
+
 export function PageContent({ type, content, entries, path, params }: PageContentProps) {
     const [isLoaded, setIsLoaded] = useState(false);
 
@@ -40,18 +54,7 @@ export function PageContent({ type, content, entries, path, params }: PageConten
 
         try {
             // 首先将路径分割成各部分并解码，以防路径中已有部分已经被编码
-            const decodedPath = currentPath
-                .split('/')
-                .map(part => {
-                    try {
-                        return decodeURIComponent(part); // 先解码
-                    } catch (e) {
-                        return part; // 如果解码失败（如不需要解码的部分），直接返回原部分
-                    }
-                })
-                .map(part => encodeURIComponent(part)) // 然后重新编码
-                .join('/');
-
+            const decodedPath = decodePath(currentPath)
             return `${GITHUB_REPO_URL}/${decodedPath}.md`;
         } catch (error) {
             console.error('GitHub URL 生成失败:', error);
@@ -60,6 +63,8 @@ export function PageContent({ type, content, entries, path, params }: PageConten
     };
 
     const renderContent = () => {
+        console.log('PageContent 渲染:', { type, content, path });
+
         switch (type) {
             case 'directory': {
                 // 使用已解析的 params

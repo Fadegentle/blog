@@ -69,9 +69,10 @@ export async function generateMetadata({ params }: PageParams) {
 export default async function Post({ params }: PageParams) {
     const resolvedParams = await params; // 确保 params 是异步解析后的
     const resolvedSlug: string[] = [...resolvedParams.slug];
-    const { slugPath, fullPath, slug } = createPaths(resolvedSlug);
+    const { slugPath, fullPath } = createPaths(resolvedSlug);
 
     try {
+        // 首先检查是否为目录
         if (fs.existsSync(fullPath) && fs.statSync(fullPath).isDirectory()) {
             const entries = fs.readdirSync(fullPath);
             const processedEntries = entries
@@ -105,18 +106,35 @@ export default async function Post({ params }: PageParams) {
             />;
         }
 
-        // 检查 .md 文件
-        const mdPath = fullPath.endsWith('.md') ? fullPath : `${fullPath}.md`;
-        if (fs.existsSync(mdPath)) {
-            const fileContents = fs.readFileSync(mdPath, 'utf8');
-            const matterResult = matter(fileContents);
-            return <PageContent
-                type="file"
-                content={fileContents}
-                title={matterResult.data.title}
-            />;
+        // 检查 .md 文件的多种可能路径
+        const possiblePaths = [
+            fullPath,                    // 原始路径
+            `${fullPath}.md`,           // 添加 .md 后缀
+            path.join(fullPath, 'README.md'),  // 目录下的 README.md
+            // 处理最后一段可能包含 .md 的情况
+            path.join(
+                path.dirname(fullPath),
+                `${path.basename(fullPath, '.md')}.md`
+            )
+        ];
+
+        console.log('尝试查找的文件路径:', possiblePaths);
+
+        for (const mdPath of possiblePaths) {
+            if (fs.existsSync(mdPath)) {
+                console.log('找到文件:', mdPath); // 添加日志便于调试
+                const fileContents = fs.readFileSync(mdPath, 'utf8');
+                const matterResult = matter(fileContents);
+                return <PageContent
+                    type="file"
+                    content={fileContents}
+                    title={matterResult.data.title}
+                    path={mdPath}
+                />;
+            }
         }
 
+        console.log('404 - 未找到文件，尝试的路径:', possiblePaths); // 添加日志
         return <PageContent type="error" path={slugPath} />;
     } catch (error) {
         console.error('Error reading file:', error);

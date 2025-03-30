@@ -1,4 +1,4 @@
-'use client'; // 添加 "use client" 指令
+'use client';
 
 import { generateRandomColdColor, generateRandomWarmColor } from './colorUtils';
 import { useLayoutEffect } from 'react';
@@ -23,8 +23,8 @@ export default function RootLayout({
 
   return (
     <html lang="en">
+      <title>Fadegentle WebSite</title>
       <head>
-        <title>Fadegentle WebSite</title>
         <link
           rel="alternate"
           type="application/rss+xml"

@@ -24,12 +24,6 @@ export function decodePath(path: string) {
         }).join('/');
 }
 
-export function getBaseFileName(fileName: string) {
-    const withoutMd = fileName.replace(/\.md$/, '');
-    const lastSlashIndex = withoutMd.lastIndexOf('/');
-    return lastSlashIndex === -1 ? withoutMd : withoutMd.slice(lastSlashIndex + 1);
-}
-
 export function decodeGitHubPath(path: string) {
     return path
         .split('/')

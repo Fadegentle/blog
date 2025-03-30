@@ -46,19 +46,20 @@ export async function generateMetadata({ params }: PageParams) {
     const resolvedSlug: string[] = [...resolvedParams.slug];
     const { undecodeFullPath, currentSlug } = createPaths(resolvedSlug);
     const fullPath = decodePath(undecodeFullPath);
+    const fileName = path.basename(fullPath, path.extname(fullPath));
 
     try {
         if (fs.existsSync(`${fullPath}.md`)) {
             const fileContents = fs.readFileSync(`${fullPath}.md`, 'utf8');
             const matterResult = matter(fileContents);
             return {
-                title: matterResult.data.title || currentSlug,
+                title: matterResult.data.title || `${fileName} | Fadegentle WebSite`,
             };
         }
 
         if (fs.existsSync(fullPath) && fs.statSync(fullPath).isDirectory()) {
             return {
-                title: currentSlug,
+                title: `${fileName} | Fadegentle WebSite`,
             };
         }
 

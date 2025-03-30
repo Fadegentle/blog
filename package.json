@@ -21,15 +21,19 @@
     "react-dom": "19.1.0",
     "react-markdown": "^10.1.0",
     "react-mermaid2": "^0.1.4",
+    "rehype-raw": "^7.0.0",
+    "remark-directive": "^4.0.0",
     "remark-gfm": "^4.0.1",
     "rss": "^1.2.2"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
+    "@types/mdast": "^4.0.4",
     "@types/node": "22.13.14",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "@types/rss": "^0.0.32",
+    "@types/unist": "^3.0.3",
     "tailwindcss": "^4",
     "typescript": "^5"
   }

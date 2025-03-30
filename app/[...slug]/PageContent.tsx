@@ -6,6 +6,12 @@ import remarkGfm from 'remark-gfm';
 import mermaid from 'mermaid';
 import matter from 'gray-matter';
 import { getGitHubUrl } from '../utils';
+import rehypeRaw from 'rehype-raw';
+import remarkDirective from 'remark-directive';
+import { visit } from 'unist-util-visit';
+import { Plugin } from 'unified';
+import { Root } from 'mdast';
+import remarkAdmonitions from './remarkAdmonitions';
 
 // 初始化 Mermaid 配置
 mermaid.initialize({
@@ -70,6 +76,41 @@ const MermaidComponent = ({ value }: { value: string }) => {
     );
 };
 
+interface DirectiveNode {
+    type: string;
+    name: string;
+    data?: {
+        hName?: string;
+        hProperties?: Record<string, unknown>;
+    };
+}
+
+const remarkCustomDirectives: Plugin<[], Root> = () => {
+    return (tree: Root) => {
+        visit(tree, (node) => {
+            if (!node || typeof node !== 'object') return;
+
+            const directive = node as DirectiveNode;
+            if (
+                directive.type === 'textDirective' ||
+                directive.type === 'leafDirective' ||
+                directive.type === 'containerDirective'
+            ) {
+                const data = directive.data || (directive.data = {});
+                const tagName = directive.type === 'textDirective' ? 'span' : 'div';
+
+                data.hName = tagName;
+                data.hProperties = {
+                    className: [`custom-${directive.name}`, directive.name],
+                };
+            }
+        });
+    };
+};
+
+export default remarkCustomDirectives;
+
+
 export function PageContent({ type, content, title, entries, path, params }: PageContentProps) {
     const [isLoaded, setIsLoaded] = useState(false);
 
@@ -80,8 +121,6 @@ export function PageContent({ type, content, title, entries, path, params }: Pag
     }, [type, content, path]);
 
     const renderContent = () => {
-        console.log('PageContent 渲染:', { type, path });
-
         switch (type) {
             case 'directory': {
                 // 使用已解析的 params
@@ -135,6 +174,7 @@ export function PageContent({ type, content, title, entries, path, params }: Pag
             case 'file': {
                 const matterResult = matter(content || '');
                 const githubUrl = path ? getGitHubUrl(path) : '';
+                console.log('GitHub URL:', path, githubUrl);
 
                 return (
                     <article>
@@ -148,7 +188,13 @@ export function PageContent({ type, content, title, entries, path, params }: Pag
                             </h2>
                             <div className="markdown-content">
                                 <ReactMarkdown
-                                    remarkPlugins={[remarkGfm]}
+                                    remarkPlugins={[
+                                        remarkGfm,
+                                        remarkDirective,
+                                        remarkCustomDirectives,
+                                        remarkAdmonitions  // 添加新插件
+                                    ]}
+                                    rehypePlugins={[rehypeRaw]}
                                     components={{
                                         code: ({
                                             inline,
@@ -172,6 +218,15 @@ export function PageContent({ type, content, title, entries, path, params }: Pag
                                                     {children}
                                                 </code>
                                             );
+                                        },
+                                        // 添加图片处理
+                                        img: ({ src, alt, ...props }) => {
+                                            const isRelativePath = src && !src.startsWith('http') && !src.startsWith('/');
+                                            const newSrc = isRelativePath
+                                                ? `/SelfSomething/${params?.slug?.slice(0, -1).join('/')}/${src}`
+                                                : src;
+
+                                            return <img src={newSrc} alt={alt} {...props} />;
                                         }
                                     }}
                                 >

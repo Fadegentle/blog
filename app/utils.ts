@@ -35,11 +35,12 @@ export function getGitHubUrl(currentPath: string) {
     if (!currentPath) return GITHUB_REPO_URL; // 防止空路径返回错误
 
     try {
-        const contentsIndex = currentPath.indexOf('contents');
+        const submodule = 'SelfSomething';
+        const contentsIndex = currentPath.indexOf(submodule);
 
         if (contentsIndex === -1) return GITHUB_REPO_URL;
 
-        const relativePath = currentPath.slice(contentsIndex + 9); // 'contents/'.length = 9
+        const relativePath = currentPath.slice(contentsIndex + submodule.length + 1); // 'contents/'.length = 9
         const decodedPath = decodePath(relativePath);
         const cleanPath = decodedPath.replace(/^\/+/, '');  // 移除开头的斜杠（如果有）
 

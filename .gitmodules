@@ -1,3 +1,3 @@
-[submodule "SelfSomething"]
+[submodule "public/SelfSomething"]
 	path = public/SelfSomething
-	url = https://github.com/Fadegentle/SelfSomething.git
+	url = git@github.com:Fadegentle/SelfSomething.git
